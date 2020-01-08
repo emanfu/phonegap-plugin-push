@@ -28,8 +28,10 @@
 
 #import "PushPlugin.h"
 #import "AppDelegate+notification.h"
-@import FirebaseInstanceID;
-@import FirebaseMessaging;
+//@import FirebaseInstanceID;
+//@import FirebaseMessaging;
+#import "FirebaseInstanceID.h"
+#import "FirebaseMessaging.h"
 @import FirebaseAnalytics;
 
 @implementation PushPlugin : CDVPlugin
@@ -53,26 +55,32 @@
 
 -(void)initRegistration;
 {
-    NSString * registrationToken = [[FIRInstanceID instanceID] token];
-
-    if (registrationToken != nil) {
-        NSLog(@"FCM Registration Token: %@", registrationToken);
-        [self setFcmRegistrationToken: registrationToken];
-
-        id topics = [self fcmTopics];
-        if (topics != nil) {
-            for (NSString *topic in topics) {
-                NSLog(@"subscribe to topic: %@", topic);
-                id pubSub = [FIRMessaging messaging];
-                [pubSub subscribeToTopic:topic];
+    [[FIRInstanceID instanceID] instanceIDWithHandler:^(FIRInstanceIDResult * _Nullable result,
+                                                        NSError * _Nullable error) {
+        if (error != nil) {
+            NSLog(@"Error fetching remote instance ID: %@", error);
+        } else {
+            NSLog(@"Remote instance ID token: %@", result.token);
+            NSString * registrationToken = result.token;
+            if (registrationToken != nil) {
+                NSLog(@"FCM Registration Token: %@", registrationToken);
+                [self setFcmRegistrationToken: registrationToken];
+                
+                id topics = [self fcmTopics];
+                if (topics != nil) {
+                    for (NSString *topic in topics) {
+                        NSLog(@"subscribe to topic: %@", topic);
+                        id pubSub = [FIRMessaging messaging];
+                        [pubSub subscribeToTopic:topic];
+                    }
+                }
+                
+                [self registerWithToken:registrationToken];
+            } else {
+                NSLog(@"FCM token is null");
             }
         }
-
-        [self registerWithToken:registrationToken];
-    } else {
-        NSLog(@"FCM token is null");
-    }
-
+    }];
 }
 
 //  FCM refresh token
