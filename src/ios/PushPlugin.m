@@ -90,7 +90,6 @@
 #if !TARGET_IPHONE_SIMULATOR
     // A rotation of the registration tokens is happening, so the app needs to request a new token.
     NSLog(@"The FCM registration token needs to be changed.");
-    [[FIRInstanceID instanceID] token];
     [self initRegistration];
 #endif
 }
